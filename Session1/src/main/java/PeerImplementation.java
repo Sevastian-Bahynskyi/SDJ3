@@ -1,3 +1,5 @@
+import utils.ConsoleColors;
+
 import java.net.MalformedURLException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
@@ -11,8 +13,16 @@ public class PeerImplementation extends UnicastRemoteObject implements PeerInter
                 "To quit current chat enter this command: ",
                 "/end"),
         RED_COLOR(
-                "To change the color to red enter this command: ",
-                "/red");
+                String.format("To change the color to %s%s%s enter this command: ", ConsoleColors.RED, "red", ConsoleColors.RESET),
+                "/red"),
+
+        YELLOW_COLOR(
+                String.format("To change the color to %s%s%s enter this command: ", ConsoleColors.YELLOW, "yellow", ConsoleColors.RESET),
+                "/yellow"),
+
+        RESET_COLOR(
+                "If you want to reset color enter this command: ",
+                "/reset_color");
 
         private final String commandValue;
         private final String descriptionValue;
@@ -60,9 +70,12 @@ public class PeerImplementation extends UnicastRemoteObject implements PeerInter
     private void setUpCommands()
     {
         COMMAND.END.setCommandAction(this::endChat);
+        COMMAND.RED_COLOR.setCommandAction(() -> System.out.println(ConsoleColors.RED));
+        COMMAND.YELLOW_COLOR.setCommandAction(() -> System.out.println(ConsoleColors.YELLOW));
+        COMMAND.RESET_COLOR.setCommandAction(() -> System.out.println(ConsoleColors.RESET));
     }
 
-    private void endChat()
+    public void endChat()
     {
         anotherPeer = null;
         isPeerChatting = false;
@@ -136,5 +149,3 @@ public class PeerImplementation extends UnicastRemoteObject implements PeerInter
         }
     }
 }
-
-

@@ -12,4 +12,6 @@ public interface PeerInterface extends Remote
     String getName() throws RemoteException;
 
     void run() throws RemoteException;
+
+    void endChat() throws RemoteException;
 }
