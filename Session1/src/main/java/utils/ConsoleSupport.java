@@ -3,6 +3,7 @@ package utils;
 import peer.PeerInterface;
 import utils.ConsoleColors;
 
+import java.net.MalformedURLException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.util.Scanner;
@@ -129,6 +130,9 @@ public class ConsoleSupport
         {
             throw new RuntimeException(e);
         } catch (NotBoundException e)
+        {
+            throw new RuntimeException(e);
+        } catch (MalformedURLException e)
         {
             throw new RuntimeException(e);
         }

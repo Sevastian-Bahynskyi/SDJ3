@@ -1,31 +1,36 @@
+package peer;
+
 import dk.via.remote.observer.RemotePropertyChangeEvent;
 import dk.via.remote.observer.RemotePropertyChangeListener;
+import dk.via.remote.observer.RemotePropertyChangeSupport;
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.net.MalformedURLException;
+import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
 import java.rmi.server.UnicastRemoteObject;
 
 
-public class PeerImplementation extends UnicastRemoteObject implements PeerInterface, RemotePropertyChangeListener<PeerList>
+public class PeerImplementation extends UnicastRemoteObject implements PeerInterface
 {
     private final String name;
     private PeerList peerList;
-    private final PropertyChangeSupport support;
+    private final RemotePropertyChangeSupport<PeerList> support;
     private PeerInterface anotherPeer;
 
 
 
-    public PeerImplementation(String name) throws MalformedURLException, RemoteException
+    public PeerImplementation(String name) throws RemoteException
     {
+        super();
         this.name = name;
         peerList = new PeerList();
         peerList.add(this);
 
-        support = new PropertyChangeSupport(this);
-        support.addPropertyChangeListener("retrieve list", (PropertyChangeListener) this);
+        support = new RemotePropertyChangeSupport<>();
         support.firePropertyChange("new peer was created", null, peerList);
     }
 
@@ -37,18 +42,17 @@ public class PeerImplementation extends UnicastRemoteObject implements PeerInter
     }
 
     @Override
-    public void lookUpForPeerByName(String peerName) throws RemoteException, NotBoundException
+    public void lookUpForPeerByName(String peerName) throws RemoteException, NotBoundException, MalformedURLException
     {
-        anotherPeer = (PeerInterface) peerList.stream().filter(peerInterface ->
-        {
-            try
-            {
-                return peerInterface.getName().equals(peerName);
-            } catch (RemoteException e)
-            {
-                throw new RuntimeException(e);
-            }
-        });
+        anotherPeer = (PeerInterface) LocateRegistry.getRegistry(5050).lookup(peerName);
+//        for (PeerInterface peerInterface:peerList)
+//        {
+//            if(peerInterface.equals(name))
+//            {
+//                anotherPeer = peerInterface;
+//                break;
+//            }
+//        }
     }
 
     @Override
@@ -64,49 +68,23 @@ public class PeerImplementation extends UnicastRemoteObject implements PeerInter
     }
 
     @Override
-    public String getName() throws RemoteException
+    public String getName()
     {
         return name;
     }
 
-    @Override
-    public void propertyChange(RemotePropertyChangeEvent<PeerList> remotePropertyChangeEvent) throws RemoteException
+    public void setPeerList(PeerList peerList)
     {
-        PeerList peerList = ((PeerList) remotePropertyChangeEvent.getNewValue());
-
-        switch (remotePropertyChangeEvent.getPropertyName())
-        {
-            case "new peer was created" -> {
-                peerList.clear();
-                peerList.addAll(peerList);
-
-                PeerInterface[] listenersOfNewPeers = ((PeerInterface[]) support.getPropertyChangeListeners("new peer created"));
-                for (PeerInterface newPeer : listenersOfNewPeers)
-                {
-                    newPeer.firePropertyChange("retrieve list", null, peerList);
-                }
-            }
-
-            case "retrieve list" -> {
-                this.peerList = peerList;
-                support.removePropertyChangeListener("retrieve list", (PropertyChangeListener) this);
-                support.addPropertyChangeListener("new peer was created", (PropertyChangeListener) this);
-            }
-        }
+        this.peerList = peerList;
     }
 
-    public void firePropertyChange(String propertyName, Object oldValue, Object newValue)
+    public PeerList getPeerList()
     {
-        support.firePropertyChange(propertyName, oldValue, newValue);
+        return peerList;
     }
 
-    public void addPropertyChangeListener(String propertyName, PropertyChangeListener listener)
+    public RemotePropertyChangeSupport<PeerList> getPropertyChangeSupport()
     {
-        support.addPropertyChangeListener(propertyName, listener);
-    }
-
-    public void removePropertyChangeListener(String propertyName, PropertyChangeListener listener)
-    {
-        support.removePropertyChangeListener(propertyName, listener);
+        return support;
     }
 }
