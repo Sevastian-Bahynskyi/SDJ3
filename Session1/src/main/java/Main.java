@@ -1,3 +1,8 @@
+import address_server.AddressServerInterface;
+import peer.PeerImplementation;
+import peer.PeerInterface;
+import utils.ConsoleSupport;
+
 import java.net.MalformedURLException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
@@ -15,6 +20,8 @@ public class Main
         System.out.println("Name yourself: ");
 
         PeerInterface peer = new PeerImplementation(new Scanner(System.in).nextLine(), addressServer);
-        peer.run();
+
+        ConsoleSupport consoleSupport = new ConsoleSupport(peer);
+        consoleSupport.run();
     }
 }

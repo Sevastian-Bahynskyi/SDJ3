@@ -1,5 +1,8 @@
+package address_server;
+
+import peer.PeerInterface;
+
 import java.net.MalformedURLException;
-import java.rmi.Naming;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.server.UnicastRemoteObject;
