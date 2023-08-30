@@ -1,11 +1,13 @@
+package utils;
+
+import peer.PeerInterface;
 import utils.ConsoleColors;
 
-import java.net.MalformedURLException;
+import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
-import java.rmi.server.UnicastRemoteObject;
 import java.util.Scanner;
 
-public class PeerImplementation extends UnicastRemoteObject implements PeerInterface
+public class ConsoleSupport
 {
     public enum COMMAND
     {
@@ -52,62 +54,42 @@ public class PeerImplementation extends UnicastRemoteObject implements PeerInter
             return String.format(descriptionValue + "\"%s\"", commandValue);
         }
     }
-    private final String name;
-    private final AddressServerInterface addressServer;
-    private PeerInterface anotherPeer;
-    boolean isPeerChatting = false;
-    boolean commandQuitWasEntered = false;
 
 
-    public PeerImplementation(String name, AddressServerInterface addressServer) throws MalformedURLException, RemoteException
+
+
+
+    private boolean isPeerChatting = false;
+    private boolean commandQuitWasEntered = false;
+    private PeerInterface peer;
+
+
+    public ConsoleSupport(PeerInterface peer)
     {
-        this.name = name;
-        this.addressServer = addressServer;
-        addressServer.registerPeer(this);
+        this.peer = peer;
         setUpCommands();
     }
 
     private void setUpCommands()
     {
-        COMMAND.END.setCommandAction(this::endChat);
+        COMMAND.END.setCommandAction(() -> {
+            try
+            {
+                peer.endChat();
+            } catch (RemoteException e)
+            {
+                throw new RuntimeException(e);
+            }
+            isPeerChatting = false;
+        });
         COMMAND.RED_COLOR.setCommandAction(() -> System.out.println(ConsoleColors.RED));
         COMMAND.YELLOW_COLOR.setCommandAction(() -> System.out.println(ConsoleColors.YELLOW));
         COMMAND.RESET_COLOR.setCommandAction(() -> System.out.println(ConsoleColors.RESET));
     }
 
-    public void endChat()
-    {
-        anotherPeer = null;
-        isPeerChatting = false;
-    }
-
-    @Override
-    public void lookUpForPeerByName(String peerName) throws RemoteException
-    {
-        anotherPeer = addressServer.lookUpPeer(peerName);
-    }
-
-    @Override
-    public void sendMessage(String message) throws RemoteException
-    {
-        anotherPeer.receiveMessage(message);
-    }
-
-    @Override
-    public void receiveMessage(String message) throws RemoteException
-    {
-        System.out.println(message);
-    }
-
-    @Override
-    public String getName() throws RemoteException
-    {
-        return name;
-    }
-
-    @Override
     public void run()
     {
+
         try
         {
             while(!commandQuitWasEntered)
@@ -116,7 +98,7 @@ public class PeerImplementation extends UnicastRemoteObject implements PeerInter
                 System.out.println("Enter peer name you want to message.");
                 Scanner scanner = new Scanner(System.in);
                 String peerName = scanner.next();
-                lookUpForPeerByName(peerName);
+                peer.lookUpForPeerByName(peerName);
                 System.out.println("You was successfully connected and now can chat with " + peerName);
 
                 {
@@ -140,10 +122,13 @@ public class PeerImplementation extends UnicastRemoteObject implements PeerInter
                     }
 
                     if (isPeerChatting) // to make sure the end chat command wasn't entered
-                        sendMessage(input);
+                        peer.sendMessage(input);
                 }
             }
         } catch (RemoteException e)
+        {
+            throw new RuntimeException(e);
+        } catch (NotBoundException e)
         {
             throw new RuntimeException(e);
         }
