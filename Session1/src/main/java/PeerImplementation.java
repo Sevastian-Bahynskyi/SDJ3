@@ -1,7 +1,11 @@
 import utils.ConsoleColors;
 
 import java.net.MalformedURLException;
+import java.rmi.AlreadyBoundException;
+import java.rmi.Naming;
+import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.Scanner;
 
@@ -53,13 +57,13 @@ public class PeerImplementation extends UnicastRemoteObject implements PeerInter
         }
     }
     private final String name;
-    private final AddressServerInterface addressServer;
     private PeerInterface anotherPeer;
+    private AddressServerInterface addressServer;
     boolean isPeerChatting = false;
     boolean commandQuitWasEntered = false;
 
 
-    public PeerImplementation(String name, AddressServerInterface addressServer) throws MalformedURLException, RemoteException
+    public PeerImplementation(String name, AddressServerInterface addressServer) throws MalformedURLException, RemoteException, AlreadyBoundException
     {
         this.name = name;
         this.addressServer = addressServer;
@@ -82,7 +86,7 @@ public class PeerImplementation extends UnicastRemoteObject implements PeerInter
     }
 
     @Override
-    public void lookUpForPeerByName(String peerName) throws RemoteException
+    public void lookUpForPeerByName(String peerName) throws RemoteException, NotBoundException, MalformedURLException
     {
         anotherPeer = addressServer.lookUpPeer(peerName);
     }
@@ -108,10 +112,11 @@ public class PeerImplementation extends UnicastRemoteObject implements PeerInter
     @Override
     public void run()
     {
-        try
+        while(!commandQuitWasEntered)
         {
-            while(!commandQuitWasEntered)
+            try
             {
+
                 isPeerChatting = true;
                 System.out.println("Enter peer name you want to message.");
                 Scanner scanner = new Scanner(System.in);
@@ -127,7 +132,7 @@ public class PeerImplementation extends UnicastRemoteObject implements PeerInter
                     }
                 }
 
-                while (isPeerChatting)
+                lld: while (isPeerChatting)
                 {
                     String input = scanner.nextLine();
 
@@ -136,16 +141,18 @@ public class PeerImplementation extends UnicastRemoteObject implements PeerInter
                         if (command.commandValue.equals(input))
                         {
                             command.executeCommand();
+                            continue lld;
                         }
                     }
 
                     if (isPeerChatting) // to make sure the end chat command wasn't entered
                         sendMessage(input);
                 }
+
+            } catch (RemoteException | NotBoundException | MalformedURLException e)
+            {
+                System.err.println("Entered peer doesn't exist");
             }
-        } catch (RemoteException e)
-        {
-            throw new RuntimeException(e);
         }
     }
 }

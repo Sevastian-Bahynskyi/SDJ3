@@ -1,4 +1,5 @@
 import java.net.MalformedURLException;
+import java.rmi.AlreadyBoundException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -7,14 +8,10 @@ import java.util.Scanner;
 
 public class Main
 {
-    public static void main(String[] args) throws RemoteException, NotBoundException, MalformedURLException, InterruptedException
+    public static void main(String[] args) throws RemoteException, MalformedURLException, AlreadyBoundException
     {
-        Registry registry = LocateRegistry.getRegistry(5050);
-        AddressServerInterface addressServer = (AddressServerInterface) registry.lookup("address server");
-
         System.out.println("Name yourself: ");
-
-        PeerInterface peer = new PeerImplementation(new Scanner(System.in).nextLine(), addressServer);
+        PeerInterface peer = new PeerImplementation(new Scanner(System.in).nextLine());
         peer.run();
     }
 }

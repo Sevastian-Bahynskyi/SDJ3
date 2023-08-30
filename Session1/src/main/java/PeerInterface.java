@@ -1,9 +1,11 @@
+import java.net.MalformedURLException;
+import java.rmi.NotBoundException;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 
 public interface PeerInterface extends Remote
 {
-    void lookUpForPeerByName(String peerName) throws RemoteException;
+    void lookUpForPeerByName(String peerName) throws RemoteException, NotBoundException, MalformedURLException;
 
     void sendMessage(String message) throws RemoteException;
 
