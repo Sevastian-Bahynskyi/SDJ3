@@ -1,4 +1,4 @@
-import address_server.AddressServerInterface;
+
 import peer.PeerImplementation;
 import peer.PeerInterface;
 import utils.ConsoleSupport;
@@ -15,11 +15,18 @@ public class Main
     public static void main(String[] args) throws RemoteException, NotBoundException, MalformedURLException, InterruptedException
     {
         Registry registry = LocateRegistry.getRegistry(5050);
-        AddressServerInterface addressServer = (AddressServerInterface) registry.lookup("address server");
+        PeerInterface mainPeer = (PeerInterface) registry.lookup("main_peer");
 
         System.out.println("Name yourself: ");
-
-        PeerInterface peer = new PeerImplementation(new Scanner(System.in).nextLine(), addressServer);
+        String peerName = new Scanner(System.in).nextLine();
+        //TODO check of name
+        PeerInterface peer = new PeerImplementation(peerName);
+        peer.getPeerList().clear();
+        mainPeer.put(peerName, peer);
+        for (PeerInterface peerInterface:mainPeer.getPeerList().values())
+        {
+            peerInterface.setPeerList(mainPeer.getPeerList());
+        }
 
         ConsoleSupport consoleSupport = new ConsoleSupport(peer);
         consoleSupport.run();

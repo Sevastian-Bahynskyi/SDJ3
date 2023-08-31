@@ -1,23 +1,40 @@
 package peer;
 
-import address_server.AddressServerInterface;
 
 import java.net.MalformedURLException;
+import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.HashMap;
+import java.util.Map;
 
 public class PeerImplementation extends UnicastRemoteObject implements PeerInterface
 {
     private final String name;
-    private final AddressServerInterface addressServer;
     private PeerInterface anotherPeer;
+    private Map<String, PeerInterface> peerList;
 
 
-    public PeerImplementation(String name, AddressServerInterface addressServer) throws MalformedURLException, RemoteException
+    public PeerImplementation(String name) throws RemoteException
     {
         this.name = name;
-        this.addressServer = addressServer;
-        addressServer.registerPeer(this);
+        peerList = new HashMap<>();
+        peerList.put(name, this);
+    }
+
+    public Map<String, PeerInterface> getPeerList()
+    {
+        return peerList;
+    }
+
+    public PeerInterface put(String key, PeerInterface value)
+    {
+        return peerList.put(key, value);
+    }
+
+    public void setPeerList(Map<String, PeerInterface> peerList)
+    {
+        this.peerList = peerList;
     }
 
     public void endChat()
@@ -28,7 +45,7 @@ public class PeerImplementation extends UnicastRemoteObject implements PeerInter
     @Override
     public void lookUpForPeerByName(String peerName) throws RemoteException, NullPointerException
     {
-        anotherPeer = addressServer.lookUpPeer(peerName);
+        anotherPeer = peerList.get(peerName);
         if(anotherPeer == null)
             throw new NullPointerException();
     }

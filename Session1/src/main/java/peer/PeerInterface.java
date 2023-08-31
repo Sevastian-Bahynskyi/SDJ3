@@ -1,11 +1,13 @@
 package peer;
 
+import java.rmi.NotBoundException;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
+import java.util.Map;
 
 public interface PeerInterface extends Remote
 {
-    void lookUpForPeerByName(String peerName) throws RemoteException;
+    void lookUpForPeerByName(String peerName) throws RemoteException, NotBoundException;
 
     void sendMessage(String message) throws RemoteException;
 
@@ -14,4 +16,10 @@ public interface PeerInterface extends Remote
     String getName() throws RemoteException;
 
     void endChat() throws RemoteException;
+
+    PeerInterface put(String key, PeerInterface value) throws RemoteException;
+
+    void setPeerList(Map<String, PeerInterface> peerList) throws RemoteException;
+
+    Map<String, PeerInterface> getPeerList() throws RemoteException;
 }
